@@ -27,8 +27,7 @@ namespace clipper
         //this is a constant indicating the window that we want to send a text message
         //const int WM_SETTEXT = 0X000C;
         IntPtr curWindows;
-        Bitmap y, temp1;
-        bool curbitmap = false;
+        Bitmap y;
         public Rectangle curRect;
 
         public void paint()

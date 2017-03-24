@@ -31,40 +31,17 @@ namespace clipper
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode >= 0 && MouseMessages.WM_LBUTTONDOWN == (MouseMessages)wParam)
-            {
-                //  The application runs to here when you click on the window whose handle you  want to get                
+            {                  
                 POINT cusorPoint;
                 bool ret = GetCursorPos(out cusorPoint);
-                // cusorPoint contains your cusor’s position when you click on the window
-
-
-                // Then use cusorPoint to get the handle of the window you clicked
-
                 IntPtr winHandle = WindowFromPoint(cusorPoint);
 
                 // winHandle is the Handle you need
                 var temp = new Form1(winHandle, rect);
                 Thread app = new Thread(() => Application.Run(temp));
                 app.Start();
-
-
-
-
-                // Because the hook may occupy much memory, so remember to uninstall the hook after
-                // you finish your work, and that is what the following code does.
                 UnhookWindowsHookEx(hHook);
                 hHook = IntPtr.Zero;
-
-
-                // Here I do not use the GetActiveWindow(). Let's call the window you clicked "DesWindow" and explain my reason.
-                // I think the hook intercepts the mouse click message before the mouse click message delivered to the DesWindow's 
-                // message queue. The application came to this function before the DesWindow became the active window, so the handle 
-                // abtained from calling GetActiveWindow() here is not the DesWindow's handle, I did some tests, and What I got is always 
-                // the Form's handle, but not the DesWindow's handle. You can do some test too.
-
-                //IntPtr handle = GetActiveWindow();
-
-
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
@@ -99,8 +76,7 @@ namespace clipper
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int idHook,
-            LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -120,6 +96,10 @@ namespace clipper
         [DllImport("user32.dll")]
         static extern IntPtr WindowFromPoint(POINT Point);
 
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool DestroyWindow(IntPtr hwnd);
+
         // I noticed that you said "In my form I have to press a button, letting it know that I want to capture a window."
         // Here you just need to add the codes in button1_Click function below into your button's message method which you want to press.   
         private void button1_Click(object sender, EventArgs e)
@@ -129,10 +109,17 @@ namespace clipper
                 using (Process curProcess = Process.GetCurrentProcess())
                 using (ProcessModule curModule = curProcess.MainModule)
                 {
-                    hHook = SetWindowsHookEx(WH_MOUSE_LL, _proc,
-                        GetModuleHandle(curModule.ModuleName), 0);
+                    hHook = SetWindowsHookEx(WH_MOUSE_LL, _proc, GetModuleHandle(curModule.ModuleName), 0);
                 }
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Enabled = false;
+            Visible = false;
+            Thread app = new Thread(() => Application.Run(new init()));
+            app.Start();
         }
     }
 }

@@ -16,26 +16,6 @@ namespace clipper
         // DECLARE GLOBALS //
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
-
-        [DllImport("User32.dll")]
-        internal static extern IntPtr SetForegroundWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
-        [DllImport("user32.dll")]
-        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-        static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
-        const UInt32 SWP_NOSIZE = 0x0001;
-        const UInt32 SWP_NOMOVE = 0x0002;
-        const UInt32 SWP_NOACTIVATE = 0x0010;
-
-
-
-        //SortedSet<Int64> oldWindow = new SortedSet<Int64>();
-        //IntPtr original;
         public init()
         {
             InitializeComponent();
@@ -54,10 +34,7 @@ namespace clipper
         
         private void init_MouseUp(object sender, MouseEventArgs e)
         {
-            //The system is no longer allowed to draw rectangles
             _canDraw = false;
-            //SetWindowPos(Handle, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-            //this.Hide();
             
             int x = startX;
             int y = startY;
@@ -66,11 +43,8 @@ namespace clipper
             rect = new Rectangle(xx, yy, xWidth, yHeight);
             Enabled = false;
             Visible = false;
-            Application.Exit();
             Thread app = new Thread(() => Application.Run(new hook(rect)));
             app.Start();
-
-
         }
         
 
@@ -81,7 +55,6 @@ namespace clipper
             //If we are not allowed to draw, simply return and disregard the rest of the code
             if (!_canDraw) return;
 
-            //Refresh the form and draw the rectangle
             Refresh();
             //The x-value of our rectangle should be the minimum between the start x-value and the current x-position
             int x = Math.Min(startX, e.X);
