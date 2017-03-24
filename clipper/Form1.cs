@@ -22,10 +22,14 @@ namespace clipper
         //this is a constant indicating the window that we want to send a text message
         //const int WM_SETTEXT = 0X000C;
         IntPtr curWindows;
+        Bitmap y;
 
         public Form1(IntPtr selectedwin)
         {
             curWindows = selectedwin;
+            y = PrintWindow(curWindows);
+            BackgroundImage = y;
+            Size = y.Size;
             InitializeComponent();
         }
 
@@ -47,18 +51,17 @@ namespace clipper
         }
         
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
+        
             
             //sending the message to the textbox
             //SendMessage(notepadTextbox, WM_SETTEXT, 0, "This is the new Text!!!");
-            Bitmap y = PrintWindow(curWindows);
-            BackgroundImage = y;
-            Size = new Size(y.Width, y.Height);
-
+            
             //BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
+        
 
-
+        private void Form1_ResizeEnd(object sender, EventArgs e)
+        {
+            BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
         }
     }
 }
