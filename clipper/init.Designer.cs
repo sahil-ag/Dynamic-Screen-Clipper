@@ -42,6 +42,7 @@
             this.Opacity = 0.25D;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "init";
+            this.TopMost = true;
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.init_MouseDown);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.init_MouseMove);

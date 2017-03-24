@@ -27,22 +27,36 @@ namespace clipper
         //this is a constant indicating the window that we want to send a text message
         //const int WM_SETTEXT = 0X000C;
         IntPtr curWindows;
-        Bitmap y;
+        Bitmap y, temp1;
+        bool curbitmap = false;
         public Rectangle curRect;
 
         public void paint()
         {
-            y = PrintWindow(curWindows);
-            BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
+            using (y = PrintWindow(curWindows))
+            {
+                Image temp1 = BackgroundImage;
+                this.BackgroundImage = new Bitmap(y, Size.Width, Size.Height);
+                try
+                {
+                    temp1.Dispose();
+                }
+                catch
+                {
+
+                }
+
+            }
         }
 
         public Form1(IntPtr selectedwin, Rectangle rect)
         {
             InitializeComponent();
+            SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             curWindows = selectedwin;
             curRect = rect;
+            Size = curRect.Size;
             paint();
-            Size = y.Size;
             timer1.Start();
         }
 
@@ -51,32 +65,42 @@ namespace clipper
             RECT rc;
             GetWindowRect(hwnd, out rc);
 
-            Bitmap bmp = new Bitmap(rc.Width, rc.Height, PixelFormat.Format24bppRgb);
-            Graphics gfxBmp = Graphics.FromImage(bmp);
-            IntPtr hdcBitmap = gfxBmp.GetHdc();
+            using (Bitmap bmp = new Bitmap(rc.Width, rc.Height, PixelFormat.Format32bppPArgb))
+            {
+                Graphics gfxBmp = Graphics.FromImage(bmp);
+                IntPtr hdcBitmap = gfxBmp.GetHdc();
 
-            PrintWindow(hwnd, hdcBitmap, 0);
+                PrintWindow(hwnd, hdcBitmap, 0);
 
-            gfxBmp.ReleaseHdc(hdcBitmap);
-            gfxBmp.Dispose();
+                gfxBmp.ReleaseHdc(hdcBitmap);
+                gfxBmp.Dispose();
 
-            bmp = bmp.Clone(curRect, PixelFormat.Format24bppRgb);
-            return bmp;
-
+                return bmp.Clone(curRect, PixelFormat.Format32bppPArgb);
+            }
         }
-        
 
-        
-            
-            //sending the message to the textbox
-            //SendMessage(notepadTextbox, WM_SETTEXT, 0, "This is the new Text!!!");
-            
-            //BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
-        
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
+                return cp;
+            }
+        }
+
+
+
+
+        //sending the message to the textbox
+        //SendMessage(notepadTextbox, WM_SETTEXT, 0, "This is the new Text!!!");
+
+        //BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
+
 
         private void Form1_ResizeEnd(object sender, EventArgs e)
         {
-            BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
+            paint();
             timer1.Start();
         }
 
