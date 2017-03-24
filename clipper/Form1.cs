@@ -28,17 +28,25 @@ namespace clipper
         //const int WM_SETTEXT = 0X000C;
         IntPtr curWindows;
         Bitmap y;
+        public Rectangle curRect;
 
-        public Form1(IntPtr selectedwin)
+        public void paint()
+        {
+            y = PrintWindow(curWindows);
+            BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
+        }
+
+        public Form1(IntPtr selectedwin, Rectangle rect)
         {
             InitializeComponent();
             curWindows = selectedwin;
-            y = PrintWindow(curWindows);
-            BackgroundImage = y;
+            curRect = rect;
+            paint();
             Size = y.Size;
+            timer1.Start();
         }
 
-        public static Bitmap PrintWindow(IntPtr hwnd)
+        public Bitmap PrintWindow(IntPtr hwnd)
         {
             RECT rc;
             GetWindowRect(hwnd, out rc);
@@ -52,7 +60,9 @@ namespace clipper
             gfxBmp.ReleaseHdc(hdcBitmap);
             gfxBmp.Dispose();
 
+            bmp = bmp.Clone(curRect, PixelFormat.Format24bppRgb);
             return bmp;
+
         }
         
 
@@ -67,6 +77,7 @@ namespace clipper
         private void Form1_ResizeEnd(object sender, EventArgs e)
         {
             BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
+            timer1.Start();
         }
 
         public const int WM_NCLBUTTONDOWN = 0xA1;
@@ -78,6 +89,16 @@ namespace clipper
                 ReleaseCapture();
                 SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
             }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            paint();
+        }
+
+        private void Form1_ResizeBegin(object sender, EventArgs e)
+        {
+            timer1.Stop();
         }
     }
 }

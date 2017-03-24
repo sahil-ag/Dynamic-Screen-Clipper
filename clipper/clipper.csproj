@@ -51,6 +51,12 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="hook.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="hook.Designer.cs">
+      <DependentUpon>hook.cs</DependentUpon>
+    </Compile>
     <Compile Include="init.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -62,6 +68,9 @@
     <Compile Include="RECT.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="hook.resx">
+      <DependentUpon>hook.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="init.resx">
       <DependentUpon>init.cs</DependentUpon>
