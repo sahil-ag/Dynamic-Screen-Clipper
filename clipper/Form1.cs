@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Collections;
 
 namespace clipper
 {
@@ -30,12 +31,58 @@ namespace clipper
         Bitmap y;
         public Rectangle curRect;
 
+
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        private const UInt32 SWP_NOSIZE = 0x0001;
+        private const UInt32 SWP_NOMOVE = 0x0002;
+        private const UInt32 TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;
+
+        public static void MakeTopMost(Form form)
+        {
+            if (form.InvokeRequired)
+            {
+                form.Invoke((Action)delegate { MakeTopMost(form); });
+                return;
+            }
+
+            SetWindowPos(form.Handle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
+        }
         public void paint()
         {
+            //if (InvokeRequired)
+            //{
+            //    Invoke(new MethodInvoker(delegate { TopMost = true; }));
+            //}
+            //TopMost = true;
+            //SetWindowPos(this.Handle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
+            //MakeTopMost(this);
             using (y = PrintWindow(curWindows))
             {
                 Image temp1 = BackgroundImage;
-                this.BackgroundImage = new Bitmap(y, Size.Width, Size.Height);
+                try
+                {
+                    this.BackgroundImage = new Bitmap(y, Size.Width, Size.Height);
+                }
+                catch
+                {
+                    try
+                    {
+                        this.BackgroundImage = new Bitmap(y);
+                    }
+                    catch
+                    {
+                        this.Enabled = false;
+                        timer1.Stop();
+                        timer1.Enabled = false;
+                        this.Visible = false;
+                    }
+                    Console.Write("lOL");
+                }
+                
                 try
                 {
                     temp1.Dispose();
@@ -73,8 +120,17 @@ namespace clipper
 
                 gfxBmp.ReleaseHdc(hdcBitmap);
                 gfxBmp.Dispose();
-
-                return bmp.Clone(curRect, PixelFormat.Format32bppPArgb);
+                Bitmap x;
+                try
+                {
+                    x = bmp.Clone(curRect, PixelFormat.Format32bppPArgb);
+                }
+                catch
+                {
+                    x = bmp;
+                }
+                return x;
+                
             }
         }
 
@@ -89,7 +145,7 @@ namespace clipper
         }
 
 
-
+        bool appSelect = false; //false for clipped window and true for real window
 
         //sending the message to the textbox
         //SendMessage(notepadTextbox, WM_SETTEXT, 0, "This is the new Text!!!");
@@ -105,12 +161,47 @@ namespace clipper
 
         public const int WM_NCLBUTTONDOWN = 0xA1;
         public const int HT_CAPTION = 0x2;
+
+        private const uint MOUSEEVENTF_MOVE = 0x0001;
+        private const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        private const uint MOUSEEVENTF_LEFTUP = 0x0004;
+        private const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
+        private const uint MOUSEEVENTF_RIGHTUP = 0x0010;
+        private const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        static extern bool SetCursorPos(uint x, uint y);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.StdCall)]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, UIntPtr dwExtraInfo);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
+
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Right)
             {
-                ReleaseCapture();
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+                appSelect = !appSelect;
+            }
+            else if (e.Button == MouseButtons.Left)
+            {
+                if (appSelect)
+                {
+                    //RECT rct;
+                    //GetWindowRect(new HandleRef(this, this.Handle), out rct);
+
+                    //SetCursorPos((uint)(curRect.X + (e.X*(curRect.Width)/Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)));
+                    IntPtr cur = GetForegroundWindow();
+                    SetForegroundWindow(curWindows);
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)(curRect.X + (e.X * (curRect.Width) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)), 0, UIntPtr.Zero);
+                    SetForegroundWindow(cur);
+                }
+                else
+                {
+                    ReleaseCapture();
+                    SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+                }
             }
         }
 
@@ -122,6 +213,18 @@ namespace clipper
         private void Form1_ResizeBegin(object sender, EventArgs e)
         {
             timer1.Stop();
+        }
+
+        private void Form1_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (appSelect)
+            {
+                //SetCursorPos((uint)(curRect.X + (e.X * (curRect.Width) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)));
+                IntPtr cur = GetForegroundWindow();
+                SetForegroundWindow(curWindows);
+                mouse_event(MOUSEEVENTF_LEFTUP, (uint)(curRect.X + (e.X * (curRect.Width) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)), 0, UIntPtr.Zero);
+                SetForegroundWindow(cur);
+            }
         }
     }
 }

@@ -47,7 +47,6 @@ namespace clipper
             app.Start();
         }
         
-
         Rectangle _rect;
         
         private void init_MouseMove(object sender, MouseEventArgs e)
