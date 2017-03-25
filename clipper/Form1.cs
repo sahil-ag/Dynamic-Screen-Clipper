@@ -226,5 +226,10 @@ namespace clipper
                 SetForegroundWindow(cur);
             }
         }
+
+        private void Form1_Paint(object sender, PaintEventArgs e)
+        {
+            MakeTopMost(this);
+        }
     }
 }
