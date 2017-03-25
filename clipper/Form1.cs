@@ -14,7 +14,10 @@ namespace clipper
         //include SendMessage
         [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int uMsg, int wParam, int lParam);
-        
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
 
         [DllImportAttribute("user32.dll")]
         public static extern bool ReleaseCapture();
@@ -312,12 +315,10 @@ namespace clipper
             }
         }
 
-        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            SetForegroundWindow(curWindows);
-
-            SetWindowPos(curWindows, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
+            const uint WM_KEYDOWN = 0x100;
+            PostMessage(curWindows, WM_KEYDOWN, ((IntPtr)e.KeyValue), (IntPtr)0);
         }
     }
 }
