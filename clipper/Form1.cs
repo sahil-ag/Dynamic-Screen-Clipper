@@ -29,9 +29,7 @@ namespace clipper
         IntPtr curWindows;
         Bitmap y;
         public Rectangle curRect;
-
-
-
+        
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
@@ -140,12 +138,6 @@ namespace clipper
 
         bool appSelect = false; //false for clipped window and true for real window
 
-        //sending the message to the textbox
-        //SendMessage(notepadTextbox, WM_SETTEXT, 0, "This is the new Text!!!");
-
-        //BackgroundImage = new Bitmap(y, new Size(Size.Width, Size.Height));
-
-
         private void Form1_ResizeEnd(object sender, EventArgs e)
         {
             paint();
@@ -245,13 +237,10 @@ namespace clipper
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left && !appSelect)
             {
-                if (!appSelect)
-                {
-                    ReleaseCapture();
-                    SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-                }
+                ReleaseCapture();
+                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
             }
         }
 
@@ -265,11 +254,27 @@ namespace clipper
             timer1.Stop();
         }
 
-
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             MakeTopMost(this);
         }
+
+        [DllImport("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, Int32 wMsg, bool wParam, Int32 lParam);
+
+        private const int WM_SETREDRAW = 11;
+
+        public static void SuspendDrawing(Control parent)
+        {
+            SendMessage(parent.Handle, WM_SETREDRAW, false, 0);
+        }
+
+        public static void ResumeDrawing(Control parent)
+        {
+            SendMessage(parent.Handle, WM_SETREDRAW, true, 0);
+            parent.Refresh();
+        }
+
 
         private void Form1_MouseClick(object sender, MouseEventArgs e)
         {
@@ -281,15 +286,19 @@ namespace clipper
             {
                 //SetCursorPos((uint)(curRect.X + (e.X*(curRect.Width*1.0)/Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height*1.0) / Size.Height)));
                 SetForegroundWindow(curWindows);
+
+                Point orig = Cursor.Position;
                 INPUT mouseDownInput = new INPUT();
                 mouseDownInput.type = SendInputEventType.InputMouse;
                 
                 mouseDownInput.mkhi.mi.dx = (int)(curRect.X + (e.X * (curRect.Width * 1.0) / Size.Width));
                 mouseDownInput.mkhi.mi.dy = (int)(curRect.Y + (e.Y * (curRect.Height * 1.0) / Size.Height));
                 mouseDownInput.mkhi.mi.mouseData = 0;
+                mouseDownInput.mkhi.mi.time = 0;
 
-                mouseDownInput.mkhi.mi.dwFlags = MouseEventFlags.MOUSEEVENTF_MOVE;
-                SendInput(1, ref mouseDownInput, Marshal.SizeOf(mouseDownInput));
+                //mouseDownInput.mkhi.mi.dwFlags = MouseEventFlags.MOUSEEVENTF_MOVE | MouseEventFlags.MOUSEEVENTF_ABSOLUTE;
+                //SendInput(1, ref mouseDownInput, Marshal.SizeOf(mouseDownInput));
+                SetCursorPos((uint)mouseDownInput.mkhi.mi.dx, (uint)mouseDownInput.mkhi.mi.dy);
 
                 mouseDownInput.mkhi.mi.dwFlags = MouseEventFlags.MOUSEEVENTF_LEFTDOWN;
                 SendInput(1, ref mouseDownInput, Marshal.SizeOf(mouseDownInput));
@@ -298,7 +307,7 @@ namespace clipper
                 SendInput(1, ref mouseDownInput, Marshal.SizeOf(mouseDownInput));
                 //mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)(curRect.X + (e.X * (curRect.Width*1.0) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height*1.0) / Size.Height)), 0, UIntPtr.Zero);
                 SetWindowPos(curWindows, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
+                SetCursorPos((uint)orig.X, (uint)orig.Y);
 
             }
         }
