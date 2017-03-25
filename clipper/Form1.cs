@@ -311,5 +311,13 @@ namespace clipper
 
             }
         }
+
+        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            SetForegroundWindow(curWindows);
+
+            SetWindowPos(curWindows, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
+        }
     }
 }
