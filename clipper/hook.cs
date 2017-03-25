@@ -100,10 +100,18 @@ namespace clipper
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool DestroyWindow(IntPtr hwnd);
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
         // I noticed that you said "In my form I have to press a button, letting it know that I want to capture a window."
         // Here you just need to add the codes in button1_Click function below into your button's message method which you want to press.   
         private void button1_Click(object sender, EventArgs e)
         {
+            /*IntPtr hook = IntPtr.Zero;
+            hook = GetForegroundWindow();
+            var temp = new Form1(hook, rect);
+            Thread app = new Thread(() => Application.Run(temp));
+            app.Start();*/
             if (IntPtr.Zero == hHook)
             {
                 using (Process curProcess = Process.GetCurrentProcess())

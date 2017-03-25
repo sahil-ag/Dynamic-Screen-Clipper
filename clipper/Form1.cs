@@ -53,13 +53,6 @@ namespace clipper
         }
         public void paint()
         {
-            //if (InvokeRequired)
-            //{
-            //    Invoke(new MethodInvoker(delegate { TopMost = true; }));
-            //}
-            //TopMost = true;
-            //SetWindowPos(this.Handle, HWND_TOPMOST, 0, 0, 0, 0, TOPMOST_FLAGS);
-            //MakeTopMost(this);
             using (y = PrintWindow(curWindows))
             {
                 Image temp1 = BackgroundImage;
@@ -75,10 +68,10 @@ namespace clipper
                     }
                     catch
                     {
-                        this.Enabled = false;
+                        //this.Enabled = false;
                         timer1.Stop();
                         timer1.Enabled = false;
-                        this.Visible = false;
+                        //this.Visible = false;
                     }
                     Console.Write("lOL");
                 }
@@ -100,6 +93,7 @@ namespace clipper
             InitializeComponent();
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             curWindows = selectedwin;
+            Console.WriteLine(curWindows.ToString());
             curRect = rect;
             Size = curRect.Size;
             paint();
@@ -178,6 +172,9 @@ namespace clipper
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
+        static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
+        const UInt32 SWP_NOACTIVATE = 0x0010;
+
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -191,11 +188,10 @@ namespace clipper
                     //RECT rct;
                     //GetWindowRect(new HandleRef(this, this.Handle), out rct);
 
-                    //SetCursorPos((uint)(curRect.X + (e.X*(curRect.Width)/Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)));
-                    IntPtr cur = GetForegroundWindow();
+                    SetCursorPos((uint)(curRect.X + (e.X*(curRect.Width*1.0)/Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height*1.0) / Size.Height)));
                     SetForegroundWindow(curWindows);
-                    mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)(curRect.X + (e.X * (curRect.Width) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)), 0, UIntPtr.Zero);
-                    SetForegroundWindow(cur);
+                    mouse_event(MOUSEEVENTF_LEFTDOWN, (uint)(curRect.X + (e.X * (curRect.Width*1.0) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height*1.0) / Size.Height)), 0, UIntPtr.Zero);
+                    SetWindowPos(curWindows, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
                 }
                 else
                 {
@@ -219,11 +215,10 @@ namespace clipper
         {
             if (appSelect)
             {
-                //SetCursorPos((uint)(curRect.X + (e.X * (curRect.Width) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)));
-                IntPtr cur = GetForegroundWindow();
+                SetCursorPos((uint)(curRect.X + (e.X * (curRect.Width*1.0) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height*1.0) / Size.Height)));
                 SetForegroundWindow(curWindows);
-                mouse_event(MOUSEEVENTF_LEFTUP, (uint)(curRect.X + (e.X * (curRect.Width) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height) / Size.Height)), 0, UIntPtr.Zero);
-                SetForegroundWindow(cur);
+                mouse_event(MOUSEEVENTF_LEFTUP, (uint)(curRect.X + (e.X * (curRect.Width*1.0) / Size.Width)), (uint)(curRect.Y + (e.Y * (curRect.Height*1.0) / Size.Height)), 0, UIntPtr.Zero);
+                SetWindowPos(curWindows, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
             }
         }
 
